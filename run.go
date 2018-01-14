@@ -1,5 +1,7 @@
 package main
 import (
+    "./models"
+
     "log"
     "os"
     "strings"
@@ -7,6 +9,11 @@ import (
     "io/ioutil"
     "encoding/json"
     "time"
+    
+    // "database/sql"
+    // _ "github.com/lib/pq"
+    // "github.com/jinzhu/gorm"
+    // _ "github.com/jinzhu/gorm/dialects/postgres"
 
     "github.com/yanzay/tbot"
     _ "github.com/joho/godotenv/autoload"        
@@ -54,16 +61,18 @@ func Run() {
 }
 
 func ListAllIdrCoins(message *tbot.Message) {
+    db := models.DbCon
+    user := models.User{FirstName: message.From.FirstName, LastName: message.From.LastName, UserName: message.From.UserName, TelegramUserUid: message.From.ID}
+    db.Create(&user)
+
     coins := []string{"Bitcoin [BTC]", "Bitcoin Cash [BCH]", "Bitcoin Gold [BTG]", "Litecoin [LTC]", "Ethereum [ETH]", "Ethereum Classic [ETC]", "Ripple [XRP]", "Lumens [XLM]", "Waves [WAVES]", "NXT [NXT]", "ZCoin [XZC]"}
-    
+
     for _, coin := range coins {
         message.Reply(coin)
     }
 }
 
 func RetrieveIdrTicker(message *tbot.Message) {
-    message.Reply("Tunggu sebentar ya")
-
     vipPublicAPI := os.Getenv("MARKET_API_URL")
     coinTicker := strings.ToLower(message.Vars["coin"])
     upCoinTicker := strings.ToUpper(coinTicker)
