@@ -1,16 +1,15 @@
 package main
-import (
-    "fmt"
-    "os"
-    "github.com/jinzhu/gorm"
-    _ "github.com/jinzhu/gorm/dialects/postgres"    
-)
+// import (
+//     "os"
+//     // "github.com/jinzhu/gorm"
+//     // _ "github.com/jinzhu/gorm/dialects/postgres"    
+// )
 
-var (
-    // DBCon is the connection handle
-    // for the database
-    DbCon *gorm.DB
-)
+// var (
+//     // DBCon is the connection handle
+//     // for the database
+//     DbCon *gorm.DB
+// )
 
 // The Stat struct should be able to decode a JSON object like this:
 // {
@@ -38,22 +37,21 @@ type Stat struct {
     }
 }
 
-type User struct {
-  gorm.Model
-  FirstName string
-  LastName string
-  UserName string
-  TelegramUserUid int
-}
+// type User struct {
+//   gorm.Model
+//   FirstName string
+//   LastName string
+//   UserName string
+//   TelegramUserUid int
+// }
 
-func InitializeDatabase() (db *gorm.DB) {
-    db, err := gorm.Open("postgres", os.Getenv("POSTGRES_ADDR"))
-    if err != nil {
-        panic(err)
-    }    
+// func InitializeDatabase() (db *gorm.DB) {
+//     db, err := gorm.Open("postgres", os.Getenv("POSTGRES_ADDR"))
+//     if err != nil {
+//         panic(err)
+//     }    
     
-    db.AutoMigrate(&User{})
+//     db.AutoMigrate(&User{})
 
-    fmt.Println("Successfully connected!")
-    return db
-}
+//     return db
+// }

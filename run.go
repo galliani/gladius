@@ -14,6 +14,10 @@ import (
 
 
 func Run() {
+    // Here we initialize the db and then assign it to a global var of DbCon which is of type *gorm.DB
+    // as defined in models.go
+    // DbCon = InitializeDatabase()
+        
     bot, err := tbot.NewServer(os.Getenv("TELEGRAM_TOKEN"))
     if err != nil {
         log.Fatal(err)
@@ -29,8 +33,8 @@ func Run() {
 }
 
 func ListAllIdrCoins(message *tbot.Message) {
-    user := User{FirstName: message.From.FirstName, LastName: message.From.LastName, UserName: message.From.UserName, TelegramUserUid: message.From.ID}
-    DbCon.Create(&user)
+    // user := User{FirstName: message.From.FirstName, LastName: message.From.LastName, UserName: message.From.UserName, TelegramUserUid: message.From.ID}
+    // DbCon.Create(&user)
 
     coins := []string{"Bitcoin [BTC]", "Bitcoin Cash [BCH]", "Bitcoin Gold [BTG]", "Litecoin [LTC]", "Ethereum [ETH]", "Ethereum Classic [ETC]", "Ripple [XRP]", "Lumens [XLM]", "Waves [WAVES]", "NXT [NXT]", "ZCoin [XZC]"}
 
