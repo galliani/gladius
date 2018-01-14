@@ -1,7 +1,5 @@
 package main
 import (
-    "./models"
-
     "log"
     "os"
     "strings"
@@ -10,40 +8,10 @@ import (
     "encoding/json"
     "time"
     
-    // "database/sql"
-    // _ "github.com/lib/pq"
-    // "github.com/jinzhu/gorm"
-    // _ "github.com/jinzhu/gorm/dialects/postgres"
-
     "github.com/yanzay/tbot"
     _ "github.com/joho/godotenv/autoload"        
 )
 
-// The Stat struct should be able to decode a JSON object like this:
-// {
-//     "ticker": {
-//         "high": "16500000",
-//         "low": "13611000",
-//         "vol_eth": "4453.35873651",
-//         "vol_idr": "66475714301",
-//         "last": "14301000",
-//         "buy": "14301000",
-//         "sell": "14375000",
-//         "server_time": 1515107696
-//     }
-// }
-type Stat struct {
-    Ticker struct {
-        High            string `json:"high"`
-        Low             string `json:"low"`
-        VolEth          string `json:"vol_eth"`
-        VolIdr          string `json:"vol_idr"`
-        Last            string `json:"last"`
-        Buy             string `json:"buy"`
-        Sell            string `json:"sell"`
-        ServerTime      int    `json:"server_time"`
-    }
-}
 
 func Run() {
     bot, err := tbot.NewServer(os.Getenv("TELEGRAM_TOKEN"))
@@ -61,9 +29,8 @@ func Run() {
 }
 
 func ListAllIdrCoins(message *tbot.Message) {
-    db := models.DbCon
-    user := models.User{FirstName: message.From.FirstName, LastName: message.From.LastName, UserName: message.From.UserName, TelegramUserUid: message.From.ID}
-    db.Create(&user)
+    user := User{FirstName: message.From.FirstName, LastName: message.From.LastName, UserName: message.From.UserName, TelegramUserUid: message.From.ID}
+    DbCon.Create(&user)
 
     coins := []string{"Bitcoin [BTC]", "Bitcoin Cash [BCH]", "Bitcoin Gold [BTG]", "Litecoin [LTC]", "Ethereum [ETH]", "Ethereum Classic [ETC]", "Ripple [XRP]", "Lumens [XLM]", "Waves [WAVES]", "NXT [NXT]", "ZCoin [XZC]"}
 
