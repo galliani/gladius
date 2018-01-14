@@ -12,8 +12,6 @@ import (
     _ "github.com/joho/godotenv/autoload"        
 )
 
-const vipPublicAPI = "https://vip.bitcoin.co.id/api/"
-
 // The Stat struct should be able to decode a JSON object like this:
 // {
 //     "ticker": {
@@ -66,6 +64,7 @@ func ListAllIdrCoins(message *tbot.Message) {
 func RetrieveIdrTicker(message *tbot.Message) {
     message.Reply("Tunggu sebentar ya")
 
+    vipPublicAPI := os.Getenv("MARKET_API_URL")
     coinTicker := strings.ToLower(message.Vars["coin"])
     upCoinTicker := strings.ToUpper(coinTicker)
 
