@@ -1,2 +1,4 @@
 .env
 vendor/github.com
+main
+deployment.zip
