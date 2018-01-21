@@ -14,10 +14,10 @@ import (
 
 
 func Run() {
-    // Here we initialize the db and then assign it to a global var of DbCon which is of type *gorm.DB
+    // Here we initialize the db and then assign it to a global var of RedisClient which is of type *gorm.DB
     // as defined in models.go
-    // DbCon = InitializeDatabase()
-        
+    RedisClient = InitializeDatabase()
+
     bot, err := tbot.NewServer(os.Getenv("TELEGRAM_TOKEN"))
     if err != nil {
         log.Fatal(err)
@@ -33,8 +33,7 @@ func Run() {
 }
 
 func ListAllIdrCoins(message *tbot.Message) {
-    // user := User{FirstName: message.From.FirstName, LastName: message.From.LastName, UserName: message.From.UserName, TelegramUserUid: message.From.ID}
-    // DbCon.Create(&user)
+    StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
 
     coins := []string{"Bitcoin [BTC]", "Bitcoin Cash [BCH]", "Bitcoin Gold [BTG]", "Litecoin [LTC]", "Ethereum [ETH]", "Ethereum Classic [ETC]", "Ripple [XRP]", "Lumens [XLM]", "Waves [WAVES]", "NXT [NXT]", "ZCoin [XZC]"}
 
@@ -44,6 +43,8 @@ func ListAllIdrCoins(message *tbot.Message) {
 }
 
 func RetrieveIdrTicker(message *tbot.Message) {
+    StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
+
     vipPublicAPI := os.Getenv("MARKET_API_URL")
     coinTicker := strings.ToLower(message.Vars["coin"])
     upCoinTicker := strings.ToUpper(coinTicker)
@@ -87,5 +88,7 @@ func RetrieveIdrTicker(message *tbot.Message) {
 }
 
 func UnkownHandler(message *tbot.Message) {
+    StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
+        
     message.Reply("Maaf, kami tidak mengerti perintah yang baru saja kamu ketik")
 }
