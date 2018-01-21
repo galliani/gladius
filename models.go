@@ -49,7 +49,7 @@ func InitializeDatabase() *redis.Client {
 }
 
 func StoreUser(username string, firstName string, lastName string, telegramUID int) {
-    recordKey := os.Getenv("REDIS_GLAD_NAMESPACE") + "_TELEGRAM_" + strconv.Itoa(telegramUID)
+    recordKey := os.Getenv("REDIS_GLAD_NAMESPACE") + ":telegram:user:" + strconv.Itoa(telegramUID)
 
     // Check if user already stored, using the key
     val, userCheckingErr := RedisClient.Exists(recordKey).Result()
@@ -71,5 +71,37 @@ func StoreUser(username string, firstName string, lastName string, telegramUID i
         }
 
         log.Println("Successfully stored the user")
+    }
+}
+
+func CheckIfTimestampIsCurrent(ticker string, timestampNow string) bool {
+    recordKey := os.Getenv("REDIS_GLAD_NAMESPACE") + ":vip:stat:timestamp"
+    
+    statPresence, statCheckingErr := RedisClient.Exists(recordKey).Result()
+    if statCheckingErr != nil {
+        panic(statCheckingErr)
+    }
+
+    timestampNowInt, _ := strconv.Atoi(timestampNow)
+    log.Println(statPresence)
+
+    if statPresence == 1 {
+        existingTimestamp, _ := RedisClient.HGet(recordKey, ticker).Result()
+        existingTimestampInt, _ := strconv.Atoi(existingTimestamp)
+
+        log.Println(timestampNowInt)
+        log.Println(existingTimestampInt)
+        return timestampNowInt < existingTimestampInt + 5
+    } else {
+        SetMarketTimestamp(recordKey, ticker, timestampNowInt)
+
+        return false
+    }
+}
+
+func SetMarketTimestamp(recordKey string, ticker string, timestampInt int) {
+    err := RedisClient.HSet(recordKey, ticker, timestampInt).Err()
+    if err != nil {
+        panic(err)
     }
 }

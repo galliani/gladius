@@ -44,46 +44,56 @@ func ListAllIdrCoins(message *tbot.Message) {
 
 func RetrieveIdrTicker(message *tbot.Message) {
     StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
-
+    
     vipPublicAPI := os.Getenv("MARKET_API_URL")
     coinTicker := strings.ToLower(message.Vars["coin"])
     upCoinTicker := strings.ToUpper(coinTicker)
 
-    resp, err := http.Get(vipPublicAPI + coinTicker + "_idr/ticker")
-    if err != nil {
-        message.Reply("Maaf, ada sesuatu yang salah")
-        log.Fatal(err)
-    }
+    timeNow := time.Now().UTC()
+    timestampNow := timeNow.Format("200601021504")
+    shouldGetLatest := !CheckIfTimestampIsCurrent(coinTicker, timestampNow)
 
-    defer resp.Body.Close()
+    if shouldGetLatest {
+        log.Println("Sending enquiry to Market.....")
 
-    if resp.StatusCode == http.StatusOK {
-
-        body, err := ioutil.ReadAll(resp.Body)
+        resp, err := http.Get(vipPublicAPI + coinTicker + "_idr/ticker")
         if err != nil {
+            message.Reply("Maaf, ada sesuatu yang salah")
             log.Fatal(err)
         }
 
-        stat := Stat{}
-        json.Unmarshal([]byte(body), &stat)
+        defer resp.Body.Close()
 
-        // check if the stat is equal to new empty struct of Stat
-        if stat != (Stat{}) {
-            message.Replyf("Berikut info mengenai aktivitas perdagangan IDR-%s", upCoinTicker)
-    
-            time.Sleep(1 * time.Second)
-    
-            message.Replyf("Harga Tertinggi (24 jam): %s", stat.Ticker.High)
-            message.Replyf("Harga Terendah (24 jam): %s", stat.Ticker.Low)
-            message.Replyf("Harga Terakhir: %s", stat.Ticker.Last)
-            message.Replyf("Harga Beli #1: %s", stat.Ticker.Buy)
-            message.Replyf("Harga Jual #1: %s", stat.Ticker.Sell)
-            message.Replyf("Volume (24 Jam): %s", stat.Ticker.VolIdr)
-            message.Reply("==========")
-        } else {
-            // The endpoint always return 200 no matter what, so this is basically the handler in case no Ticker was found
-            message.Replyf("Maaf, saya tidak bisa mendapatkan info mengenai aktivitas perdagangan IDR-%s", upCoinTicker)
+        if resp.StatusCode == http.StatusOK {
+
+            body, err := ioutil.ReadAll(resp.Body)
+            if err != nil {
+                log.Fatal(err)
+            }
+
+            stat := Stat{}
+            json.Unmarshal([]byte(body), &stat)
+
+            // check if the stat is equal to new empty struct of Stat
+            if stat != (Stat{}) {
+                message.Replyf("Berikut info mengenai aktivitas perdagangan IDR-%s", upCoinTicker)
+        
+                time.Sleep(1 * time.Second)
+        
+                message.Replyf("Harga Tertinggi (24 jam): %s", stat.Ticker.High)
+                message.Replyf("Harga Terendah (24 jam): %s", stat.Ticker.Low)
+                message.Replyf("Harga Terakhir: %s", stat.Ticker.Last)
+                message.Replyf("Harga Beli #1: %s", stat.Ticker.Buy)
+                message.Replyf("Harga Jual #1: %s", stat.Ticker.Sell)
+                message.Replyf("Volume (24 Jam): %s", stat.Ticker.VolIdr)
+                message.Reply("==========")
+            } else {
+                // The endpoint always return 200 no matter what, so this is basically the handler in case no Ticker was found
+                message.Replyf("Maaf, saya tidak bisa mendapatkan info mengenai aktivitas perdagangan IDR-%s", upCoinTicker)
+            }
         }
+    } else {
+        message.Reply("Sebentar, kami akan memberikan info terbaru")
     }
 }
 
