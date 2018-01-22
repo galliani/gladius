@@ -96,7 +96,22 @@ func RetrieveIdrTicker(message *tbot.Message) {
             }
         }
     } else {
-        message.Reply("Sebentar, kami akan memberikan info terbaru")
+        high := RetrieveMarketStat(coinTicker, "high_price")
+        low  := RetrieveMarketStat(coinTicker, "low_price")
+        last := RetrieveMarketStat(coinTicker, "latest_price")
+        buy  := RetrieveMarketStat(coinTicker, "buy_price")
+        sell := RetrieveMarketStat(coinTicker, "sell_price")
+
+        message.Replyf("Berikut info mengenai aktivitas perdagangan IDR-%s", upCoinTicker)
+
+        time.Sleep(2 * time.Second)
+
+        message.Replyf("Harga Tertinggi (24 jam): %s", high)
+        message.Replyf("Harga Terendah (24 jam): %s", low)
+        message.Replyf("Harga Terakhir: %s", last)
+        message.Replyf("Harga Beli #1: %s", buy)
+        message.Replyf("Harga Jual #1: %s", sell)
+        message.Reply("==========")        
     }
 }
 

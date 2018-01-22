@@ -96,6 +96,17 @@ func CheckIfTimestampIsCurrent(ticker string, timestampNow string) bool {
     }
 }
 
+func RetrieveMarketStat(ticker string, statAttr string) string {
+    recordKey := os.Getenv("REDIS_GLAD_NAMESPACE") + ":vip:stat:" + ticker
+
+    attr, err := RedisClient.HGet(recordKey, statAttr).Result()
+    if err != nil {
+        panic(err)
+    }
+
+    return attr
+}
+
 func SetMarketTimestamp(ticker string, timestampNow string) {
     recordKey := os.Getenv("REDIS_GLAD_NAMESPACE") + ":vip:stat:timestamp"
     timestampInt, _ := strconv.Atoi(timestampNow)
