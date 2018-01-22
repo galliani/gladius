@@ -25,7 +25,6 @@ type Stat struct {
     Ticker struct {
         High            string `json:"high"`
         Low             string `json:"low"`
-        VolEth          string `json:"vol_eth"`
         VolIdr          string `json:"vol_idr"`
         Last            string `json:"last"`
         Buy             string `json:"buy"`
@@ -77,7 +76,7 @@ func StoreUser(username string, firstName string, lastName string, telegramUID i
 func CheckIfTimestampIsCurrent(ticker string, timestampNow string) bool {
     recordKey := os.Getenv("REDIS_GLAD_NAMESPACE") + ":vip:stat:timestamp"
     
-    statPresence, statCheckingErr := RedisClient.Exists(recordKey).Result()
+    statPresence, statCheckingErr := RedisClient.HExists(recordKey, ticker).Result()
     if statCheckingErr != nil {
         panic(statCheckingErr)
     }
@@ -85,23 +84,47 @@ func CheckIfTimestampIsCurrent(ticker string, timestampNow string) bool {
     timestampNowInt, _ := strconv.Atoi(timestampNow)
     log.Println(statPresence)
 
-    if statPresence == 1 {
+    if statPresence {
         existingTimestamp, _ := RedisClient.HGet(recordKey, ticker).Result()
         existingTimestampInt, _ := strconv.Atoi(existingTimestamp)
 
         log.Println(timestampNowInt)
         log.Println(existingTimestampInt)
-        return timestampNowInt < existingTimestampInt + 5
+        return existingTimestampInt + 5 > timestampNowInt
     } else {
-        SetMarketTimestamp(recordKey, ticker, timestampNowInt)
-
         return false
     }
 }
 
-func SetMarketTimestamp(recordKey string, ticker string, timestampInt int) {
+func SetMarketTimestamp(ticker string, timestampNow string) {
+    recordKey := os.Getenv("REDIS_GLAD_NAMESPACE") + ":vip:stat:timestamp"
+    timestampInt, _ := strconv.Atoi(timestampNow)
+
     err := RedisClient.HSet(recordKey, ticker, timestampInt).Err()
     if err != nil {
         panic(err)
     }
+
+    log.Printf("Successfully updated market timestamp for %s", ticker)
+}
+
+func StoreMarketStat(ticker string, stat *Stat, timestampNow string) {
+    recordKey := os.Getenv("REDIS_GLAD_NAMESPACE") + ":vip:stat:" + ticker
+    
+    statCheckingErr := RedisClient.Exists(recordKey).Err()
+    if statCheckingErr != nil {
+        panic(statCheckingErr)
+    }
+
+    newHighReplyErr := RedisClient.HSet(recordKey, "high_price", stat.Ticker.High).Err()
+    newLowReplyErr := RedisClient.HSet(recordKey, "low_price", stat.Ticker.Low).Err()
+    newLatestReplyErr := RedisClient.HSet(recordKey, "latest_price", stat.Ticker.Last).Err()
+    newBuyReplyErr := RedisClient.HSet(recordKey, "buy_price", stat.Ticker.Buy).Err()
+    newSellReplyErr := RedisClient.HSet(recordKey, "sell_price", stat.Ticker.Sell).Err()
+
+    if newHighReplyErr != nil || newLowReplyErr != nil || newLatestReplyErr != nil || newBuyReplyErr != nil || newSellReplyErr != nil {
+        log.Fatal("Failed to store the latest market stat")
+    }
+
+    log.Printf("Successfully updated market stat at %s", timestampNow)
 }

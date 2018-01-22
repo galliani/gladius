@@ -74,11 +74,14 @@ func RetrieveIdrTicker(message *tbot.Message) {
             stat := Stat{}
             json.Unmarshal([]byte(body), &stat)
 
-            // check if the stat is equal to new empty struct of Stat
+            // check if the stat is not equal to new empty struct of Stat
             if stat != (Stat{}) {
+                StoreMarketStat(coinTicker, &stat, timestampNow)
+                SetMarketTimestamp(coinTicker, timestampNow)
+
                 message.Replyf("Berikut info mengenai aktivitas perdagangan IDR-%s", upCoinTicker)
         
-                time.Sleep(1 * time.Second)
+                time.Sleep(2 * time.Second)
         
                 message.Replyf("Harga Tertinggi (24 jam): %s", stat.Ticker.High)
                 message.Replyf("Harga Terendah (24 jam): %s", stat.Ticker.Low)
