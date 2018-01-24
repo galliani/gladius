@@ -90,7 +90,6 @@ func RetrieveIdrTicker(message *tbot.Message) {
                 message.Replyf("Harga Terakhir: %s", stat.Ticker.Last)
                 message.Replyf("Harga Beli #1: %s", stat.Ticker.Buy)
                 message.Replyf("Harga Jual #1: %s", stat.Ticker.Sell)
-                message.Replyf("Volume (24 Jam): %s", stat.Ticker.VolIdr)
                 message.Reply("==========")
             } else {
                 // The endpoint always return 200 no matter what, so this is basically the handler in case no Ticker was found
@@ -98,22 +97,9 @@ func RetrieveIdrTicker(message *tbot.Message) {
             }
         }
     } else {
-        high := models.RetrieveMarketStat(coinTicker, "high_price")
-        low  := models.RetrieveMarketStat(coinTicker, "low_price")
-        last := models.RetrieveMarketStat(coinTicker, "latest_price")
-        buy  := models.RetrieveMarketStat(coinTicker, "buy_price")
-        sell := models.RetrieveMarketStat(coinTicker, "sell_price")
+        stat := models.RetrieveMarketStats(coinTicker)
 
-        message.Replyf("Berikut info mengenai aktivitas perdagangan IDR-%s", upCoinTicker)
-
-        time.Sleep(2 * time.Second)
-
-        message.Replyf("Harga Tertinggi (24 jam): %s", high)
-        message.Replyf("Harga Terendah (24 jam): %s", low)
-        message.Replyf("Harga Terakhir: %s", last)
-        message.Replyf("Harga Beli #1: %s", buy)
-        message.Replyf("Harga Jual #1: %s", sell)
-        message.Reply("==========")        
+        relayStats(upCoinTicker, message, stat)
     }
 }
 
@@ -121,4 +107,17 @@ func UnkownHandler(message *tbot.Message) {
     models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
         
     message.Reply("Maaf, kami tidak mengerti perintah yang baru saja kamu ketik")
+}
+
+func relayStats(ticker string, message *tbot.Message, stat *models.PseudoTicker) {
+    message.Replyf("Berikut info mengenai aktivitas perdagangan IDR-%s", ticker)
+
+    time.Sleep(2 * time.Second)
+
+    message.Replyf("Harga Tertinggi (24 jam): %s", stat.High)
+    message.Replyf("Harga Terendah (24 jam): %s", stat.Low)
+    message.Replyf("Harga Terakhir: %s", stat.Last)
+    message.Replyf("Harga Beli #1: %s", stat.Buy)
+    message.Replyf("Harga Jual #1: %s", stat.Sell)
+    message.Reply("==========")
 }

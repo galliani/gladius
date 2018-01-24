@@ -33,6 +33,13 @@ type Stat struct {
     }
 }
 
+type PseudoTicker struct {
+    High            string
+    Low             string
+    Last            string
+    Buy             string
+    Sell            string
+}
 
 func InitializeDatabase() *redis.Client {
     client := redis.NewClient(&redis.Options{
@@ -96,7 +103,7 @@ func CheckIfTimestampIsCurrent(ticker string, timestampNow string) bool {
     }
 }
 
-func RetrieveMarketStat(ticker string, statAttr string) string {
+func getMarketStat(ticker string, statAttr string) string {
     recordKey := os.Getenv("REDIS_GLAD_NAMESPACE") + ":vip:stat:" + ticker
 
     attr, err := RedisClient.HGet(recordKey, statAttr).Result()
@@ -105,6 +112,23 @@ func RetrieveMarketStat(ticker string, statAttr string) string {
     }
 
     return attr
+}
+
+func RetrieveMarketStats(ticker string) *PseudoTicker {
+    high := getMarketStat(ticker, "high_price")
+    low  := getMarketStat(ticker, "low_price")
+    last := getMarketStat(ticker, "latest_price")
+    buy  := getMarketStat(ticker, "buy_price")
+    sell := getMarketStat(ticker, "sell_price")
+
+    pseudoTicker := new(PseudoTicker)
+    pseudoTicker.High =   high
+    pseudoTicker.Low =   low
+    pseudoTicker.Buy =   buy
+    pseudoTicker.Sell =   sell
+    pseudoTicker.Last =   last
+
+    return pseudoTicker
 }
 
 func SetMarketTimestamp(ticker string, timestampNow string) {
