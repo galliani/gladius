@@ -14,6 +14,7 @@ import (
     "./models"
 )
 
+var vipPublicAPI = os.Getenv("MARKET_API_URL")
 
 func Run() {
     // Here we initialize the db and then assign it to a global var of RedisClient which is of type *gorm.DB
@@ -45,37 +46,18 @@ func ListAllIdrCoins(message *tbot.Message) {
 }
 
 func RetrieveIdrTicker(message *tbot.Message) {
-    models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
-    
-    vipPublicAPI := os.Getenv("MARKET_API_URL")
+    timestampNow := getTimestampNow()
     coinTicker := strings.ToLower(message.Vars["coin"])
-    upCoinTicker := strings.ToUpper(coinTicker)
 
-    timeNow := time.Now().UTC()
-    timestampNow := timeNow.Format("200601021504")
+    models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
     shouldGetLatest := !models.CheckIfTimestampIsCurrent(coinTicker, timestampNow)
 
     if shouldGetLatest {
-        log.Println("Sending enquiry to Market.....")
-
-        resp, err := http.Get(vipPublicAPI + coinTicker + "_idr/ticker")
-        if err != nil {
-            message.Reply("Maaf, ada sesuatu yang salah")
-            log.Fatal(err)
-        }
-
+        resp := sendRequestToFetchTicker(coinTicker, message)
         defer resp.Body.Close()
 
         if resp.StatusCode == http.StatusOK {
-
-            body, err := ioutil.ReadAll(resp.Body)
-            if err != nil {
-                log.Fatal(err)
-            }
-
-            stat := models.Stat{}
-            json.Unmarshal([]byte(body), &stat)
-
+            stat := parseResponseAsTicker(resp)
             // check if the stat is not equal to new empty struct of Stat
             if stat != (models.Stat{}) {
                 models.StoreMarketStat(coinTicker, &stat, timestampNow)
@@ -83,28 +65,31 @@ func RetrieveIdrTicker(message *tbot.Message) {
 
                 pseudoTicker := stat.ConvertToPseudoTicker()
 
-                relayStats(upCoinTicker, message, pseudoTicker)
+                relayStats(coinTicker, message, pseudoTicker)
             } else {
                 // The endpoint always return 200 no matter what, so this is basically the handler in case no Ticker was found
-                message.Replyf("Maaf, saya tidak bisa mendapatkan info mengenai aktivitas perdagangan IDR-%s", upCoinTicker)
+                message.Replyf("Maaf, saya tidak bisa mendapatkan info mengenai aktivitas perdagangan IDR-%s", strings.ToUpper(coinTicker))
             }
         }
     } else {
         stat := models.RetrieveMarketStats(coinTicker)
 
-        relayStats(upCoinTicker, message, stat)
+        relayStats(coinTicker, message, stat)
     }
 }
 
 func UnkownHandler(message *tbot.Message) {
     models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
         
-    message.Reply("Maaf, kami tidak mengerti perintah yang baru saja kamu ketik")
+    message.Reply("Maaf, saya tidak mengerti perintah yang baru saja kamu ketik")
 }
 
-// Private methods //
+
+
+//// Private methods ////
+
 func relayStats(ticker string, message *tbot.Message, stat *models.PseudoTicker) {
-    message.Replyf("Berikut info mengenai aktivitas perdagangan IDR-%s", ticker)
+    message.Replyf("Berikut info mengenai aktivitas perdagangan IDR-%s", strings.ToUpper(ticker))
 
     time.Sleep(2 * time.Second)
 
@@ -116,4 +101,34 @@ func relayStats(ticker string, message *tbot.Message, stat *models.PseudoTicker)
     message.Replyf("Harga Tertinggi (24 jam): %s", stat.High)
     message.Replyf("Harga Terendah (24 jam): %s", stat.Low)
     message.Reply("==========")
+}
+
+func getTimestampNow() string {
+    timeNow := time.Now().UTC()
+    return timeNow.Format("200601021504")
+}
+
+// HTTP-related methods
+func sendRequestToFetchTicker(coinTicker string, message *tbot.Message) *http.Response {
+    resp, err := http.Get(vipPublicAPI + coinTicker + "_idr/ticker")
+    if err != nil {
+        message.Reply("Maaf, saya gagal mendapatkan data terbaru")        
+        log.Fatal(err)
+    }
+
+    return resp
+}
+
+func parseResponseAsTicker(resp *http.Response) models.Stat {
+    log.Println("Sending enquiry to Market.....")
+
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    stat := models.Stat{}
+    json.Unmarshal([]byte(body), &stat)
+
+    return stat
 }
