@@ -81,16 +81,14 @@ func RetrieveIdrTicker(message *tbot.Message) {
                 models.StoreMarketStat(coinTicker, &stat, timestampNow)
                 models.SetMarketTimestamp(coinTicker, timestampNow)
 
-                message.Replyf("Berikut info mengenai aktivitas perdagangan IDR-%s", upCoinTicker)
-        
-                time.Sleep(2 * time.Second)
-        
-                message.Replyf("Harga Tertinggi (24 jam): %s", stat.Ticker.High)
-                message.Replyf("Harga Terendah (24 jam): %s", stat.Ticker.Low)
-                message.Replyf("Harga Terakhir: %s", stat.Ticker.Last)
-                message.Replyf("Harga Beli #1: %s", stat.Ticker.Buy)
-                message.Replyf("Harga Jual #1: %s", stat.Ticker.Sell)
-                message.Reply("==========")
+                pseudoTicker        := new(models.PseudoTicker)
+                pseudoTicker.High   =   stat.Ticker.High
+                pseudoTicker.Low    =   stat.Ticker.Low
+                pseudoTicker.Buy    =   stat.Ticker.Buy
+                pseudoTicker.Sell   =   stat.Ticker.Sell
+                pseudoTicker.Last   =   stat.Ticker.Last
+
+                relayStats(upCoinTicker, message, pseudoTicker)
             } else {
                 // The endpoint always return 200 no matter what, so this is basically the handler in case no Ticker was found
                 message.Replyf("Maaf, saya tidak bisa mendapatkan info mengenai aktivitas perdagangan IDR-%s", upCoinTicker)
@@ -109,6 +107,7 @@ func UnkownHandler(message *tbot.Message) {
     message.Reply("Maaf, kami tidak mengerti perintah yang baru saja kamu ketik")
 }
 
+// Private methods //
 func relayStats(ticker string, message *tbot.Message, stat *models.PseudoTicker) {
     message.Replyf("Berikut info mengenai aktivitas perdagangan IDR-%s", ticker)
 
