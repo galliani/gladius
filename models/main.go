@@ -34,6 +34,17 @@ type Stat struct {
     }
 }
 
+func (s *Stat) ConvertToPseudoTicker() *PseudoTicker {
+    pseudoTicker        := new(PseudoTicker)
+    pseudoTicker.High   =   s.Ticker.High
+    pseudoTicker.Low    =   s.Ticker.Low
+    pseudoTicker.Buy    =   s.Ticker.Buy
+    pseudoTicker.Sell   =   s.Ticker.Sell
+    pseudoTicker.Last   =   s.Ticker.Last
+
+    return pseudoTicker
+}
+
 type PseudoTicker struct {
     High            string
     Low             string

@@ -81,12 +81,7 @@ func RetrieveIdrTicker(message *tbot.Message) {
                 models.StoreMarketStat(coinTicker, &stat, timestampNow)
                 models.SetMarketTimestamp(coinTicker, timestampNow)
 
-                pseudoTicker        := new(models.PseudoTicker)
-                pseudoTicker.High   =   stat.Ticker.High
-                pseudoTicker.Low    =   stat.Ticker.Low
-                pseudoTicker.Buy    =   stat.Ticker.Buy
-                pseudoTicker.Sell   =   stat.Ticker.Sell
-                pseudoTicker.Last   =   stat.Ticker.Last
+                pseudoTicker := stat.ConvertToPseudoTicker()
 
                 relayStats(upCoinTicker, message, pseudoTicker)
             } else {
