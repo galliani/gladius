@@ -113,10 +113,12 @@ func relayStats(ticker string, message *tbot.Message, stat *models.PseudoTicker)
 
     time.Sleep(2 * time.Second)
 
-    message.Replyf("Harga Tertinggi (24 jam): %s", stat.High)
-    message.Replyf("Harga Terendah (24 jam): %s", stat.Low)
+    stat.DisplayAsMoney()
+
     message.Replyf("Harga Terakhir: %s", stat.Last)
     message.Replyf("Harga Beli #1: %s", stat.Buy)
     message.Replyf("Harga Jual #1: %s", stat.Sell)
+    message.Replyf("Harga Tertinggi (24 jam): %s", stat.High)
+    message.Replyf("Harga Terendah (24 jam): %s", stat.Low)
     message.Reply("==========")
 }

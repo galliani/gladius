@@ -4,6 +4,7 @@ import (
     "os"
     "strconv"
     "github.com/go-redis/redis"
+    "github.com/leekchan/accounting"
 )
 
 var RedisClient *redis.Client
@@ -39,6 +40,22 @@ type PseudoTicker struct {
     Last            string
     Buy             string
     Sell            string
+}
+
+func (p *PseudoTicker) DisplayAsMoney() {
+    highInt, _ := strconv.Atoi(p.High)
+    lowInt, _ := strconv.Atoi(p.Low)
+    lastInt, _ := strconv.Atoi(p.Last)
+    buyInt, _ := strconv.Atoi(p.Buy)
+    sellInt, _ := strconv.Atoi(p.Sell)
+
+    ac := accounting.Accounting{Symbol: "Rp ", Precision: 2, Thousand: ".", Decimal: ","}
+    
+    p.High  = ac.FormatMoneyInt(highInt)
+    p.Low   = ac.FormatMoneyInt(lowInt)
+    p.Last  = ac.FormatMoneyInt(lastInt)
+    p.Buy   = ac.FormatMoneyInt(buyInt)
+    p.Sell  = ac.FormatMoneyInt(sellInt)
 }
 
 func InitializeDatabase() *redis.Client {
