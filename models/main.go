@@ -9,6 +9,19 @@ import (
 
 var RedisClient *redis.Client
 
+func InitializeDatabase() *redis.Client {
+    client := redis.NewClient(&redis.Options{
+        Addr:     os.Getenv("REDIS_ADDR"),
+        Password: os.Getenv("REDIS_PASSWORD"),
+        DB:       0,
+    })
+
+    pong, err := client.Ping().Result()
+    log.Println(pong, err)
+
+    return client
+}
+
 // The Stat struct should be able to decode a JSON object like this:
 // {
 //     "ticker": {
@@ -34,6 +47,15 @@ type Stat struct {
     }
 }
 
+type PseudoTicker struct {
+    High            string
+    Low             string
+    Last            string
+    Buy             string
+    Sell            string
+}
+
+// Structs-related functions
 func (s *Stat) ConvertToPseudoTicker() *PseudoTicker {
     pseudoTicker        := new(PseudoTicker)
     pseudoTicker.High   =   s.Ticker.High
@@ -43,14 +65,6 @@ func (s *Stat) ConvertToPseudoTicker() *PseudoTicker {
     pseudoTicker.Last   =   s.Ticker.Last
 
     return pseudoTicker
-}
-
-type PseudoTicker struct {
-    High            string
-    Low             string
-    Last            string
-    Buy             string
-    Sell            string
 }
 
 func (p *PseudoTicker) DisplayAsMoney() {
@@ -69,19 +83,8 @@ func (p *PseudoTicker) DisplayAsMoney() {
     p.Sell  = ac.FormatMoneyInt(sellInt)
 }
 
-func InitializeDatabase() *redis.Client {
-    client := redis.NewClient(&redis.Options{
-        Addr:     os.Getenv("REDIS_ADDR"),
-        Password: os.Getenv("REDIS_PASSWORD"),
-        DB:       0,
-    })
 
-    pong, err := client.Ping().Result()
-    log.Println(pong, err)
-
-    return client
-}
-
+// Redis-related functions
 func StoreUser(username string, firstName string, lastName string, telegramUID int) {
     recordKey := os.Getenv("REDIS_GLAD_NAMESPACE") + ":telegram:user:" + strconv.Itoa(telegramUID)
 
@@ -109,7 +112,7 @@ func StoreUser(username string, firstName string, lastName string, telegramUID i
 }
 
 func CheckIfTimestampIsCurrent(ticker string, timestampNow string) bool {
-    recordKey := os.Getenv("REDIS_GLAD_NAMESPACE") + ":vip:stat:timestamp"
+    recordKey := keyForTimestampRecord()
     
     statPresence, statCheckingErr := RedisClient.HExists(recordKey, ticker).Result()
     if statCheckingErr != nil {
@@ -117,29 +120,27 @@ func CheckIfTimestampIsCurrent(ticker string, timestampNow string) bool {
     }
 
     timestampNowInt, _ := strconv.Atoi(timestampNow)
-    log.Println(statPresence)
 
     if statPresence {
         existingTimestamp, _ := RedisClient.HGet(recordKey, ticker).Result()
         existingTimestampInt, _ := strconv.Atoi(existingTimestamp)
 
-        log.Println(timestampNowInt)
-        log.Println(existingTimestampInt)
         return existingTimestampInt + 5 > timestampNowInt
     } else {
         return false
     }
 }
 
-func getMarketStat(ticker string, statAttr string) string {
-    recordKey := os.Getenv("REDIS_GLAD_NAMESPACE") + ":vip:stat:" + ticker
+func SetMarketTimestamp(ticker string, timestampNow string) {
+    recordKey := keyForTimestampRecord()
+    timestampInt, _ := strconv.Atoi(timestampNow)
 
-    attr, err := RedisClient.HGet(recordKey, statAttr).Result()
+    err := RedisClient.HSet(recordKey, ticker, timestampInt).Err()
     if err != nil {
         panic(err)
     }
 
-    return attr
+    log.Printf("Successfully updated market timestamp for %s", ticker)
 }
 
 func RetrieveMarketStats(ticker string) *PseudoTicker {
@@ -159,20 +160,8 @@ func RetrieveMarketStats(ticker string) *PseudoTicker {
     return pseudoTicker
 }
 
-func SetMarketTimestamp(ticker string, timestampNow string) {
-    recordKey := os.Getenv("REDIS_GLAD_NAMESPACE") + ":vip:stat:timestamp"
-    timestampInt, _ := strconv.Atoi(timestampNow)
-
-    err := RedisClient.HSet(recordKey, ticker, timestampInt).Err()
-    if err != nil {
-        panic(err)
-    }
-
-    log.Printf("Successfully updated market timestamp for %s", ticker)
-}
-
 func StoreMarketStat(ticker string, stat *Stat, timestampNow string) {
-    recordKey := os.Getenv("REDIS_GLAD_NAMESPACE") + ":vip:stat:" + ticker
+    recordKey := keyForStatRecord(ticker)
     
     statCheckingErr := RedisClient.Exists(recordKey).Err()
     if statCheckingErr != nil {
@@ -190,4 +179,25 @@ func StoreMarketStat(ticker string, stat *Stat, timestampNow string) {
     }
 
     log.Printf("Successfully updated market stat at %s", timestampNow)
+}
+
+
+// private functions
+func getMarketStat(ticker string, statAttr string) string {
+    recordKey := keyForStatRecord(ticker)
+
+    attr, err := RedisClient.HGet(recordKey, statAttr).Result()
+    if err != nil {
+        panic(err)
+    }
+
+    return attr
+}
+
+func keyForTimestampRecord() string {
+    return os.Getenv("REDIS_GLAD_NAMESPACE") + ":vip:stat:timestamp"   
+}
+
+func keyForStatRecord(coinName string) string {
+    return os.Getenv("REDIS_GLAD_NAMESPACE") + ":vip:stat:" + coinName
 }
