@@ -30,7 +30,7 @@ func Run() {
     go bot.HandleFunc("/harga {coin}", RetrieveIdrTicker)
 
     // Set default handler if you want to process unmatched input
-    go bot.HandleDefault(UnkownHandler)
+    bot.HandleDefault(UnkownHandler)
 
     bot.ListenAndServe()
 }

@@ -96,16 +96,14 @@ func StoreUser(username string, firstName string, lastName string, telegramUID i
 
     // If the user is not found, indicated by val is equal to 0, then store the user
     if val != 1 {
-        fullName := firstName + " " + lastName
+        var user = make(map[string]interface{})
+        user["username"] = username
+        user["fullname"] = firstName + " " + lastName
 
-        userNameStoringErr := RedisClient.HSet(recordKey, "username", username).Err()
-        if userNameStoringErr != nil {
-            panic(userNameStoringErr)
+        storingUserErr := RedisClient.HMSet(recordKey, user).Err()
+        if storingUserErr != nil {
+            log.Fatal("Failed to store the user")
         }    
-        fullNameStoringErr := RedisClient.HSet(recordKey, "fullname", fullName).Err()
-        if fullNameStoringErr != nil {
-            panic(fullNameStoringErr)
-        }
 
         log.Println("Successfully stored the user")
     }
@@ -162,19 +160,16 @@ func RetrieveMarketStats(ticker string) *PseudoTicker {
 
 func StoreMarketStat(ticker string, stat *Stat, timestampNow string) {
     recordKey := keyForStatRecord(ticker)
-    
-    statCheckingErr := RedisClient.Exists(recordKey).Err()
-    if statCheckingErr != nil {
-        panic(statCheckingErr)
-    }
 
-    newHighReplyErr := RedisClient.HSet(recordKey, "high_price", stat.Ticker.High).Err()
-    newLowReplyErr := RedisClient.HSet(recordKey, "low_price", stat.Ticker.Low).Err()
-    newLatestReplyErr := RedisClient.HSet(recordKey, "latest_price", stat.Ticker.Last).Err()
-    newBuyReplyErr := RedisClient.HSet(recordKey, "buy_price", stat.Ticker.Buy).Err()
-    newSellReplyErr := RedisClient.HSet(recordKey, "sell_price", stat.Ticker.Sell).Err()
+    var st = make(map[string]interface{})
+    st["high_price"] = stat.Ticker.High
+    st["low_price"] = stat.Ticker.Low
+    st["latest_price"] = stat.Ticker.Last
+    st["buy_price"] = stat.Ticker.Buy
+    st["sell_price"] = stat.Ticker.Sell
 
-    if newHighReplyErr != nil || newLowReplyErr != nil || newLatestReplyErr != nil || newBuyReplyErr != nil || newSellReplyErr != nil {
+    err := RedisClient.HMSet(recordKey, st).Err()
+    if(err != nil){
         log.Fatal("Failed to store the latest market stat")
     }
 
