@@ -84,7 +84,8 @@ func RetrieveIdrTicker(message *tbot.Message) {
 
 func UnkownHandler(message *tbot.Message) {
     go models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
-    message.Replyf("Maaf %s, saya tidak mengerti perintah yang baru saja kamu ketik", message.From)
+
+    message.Replyf("Maaf %s, saya tidak mengerti permintaanmu barusan", message.From.FirstName)
 }
 
 
