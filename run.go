@@ -26,17 +26,17 @@ func Run() {
         log.Fatal(err)
     }
 
-    bot.HandleFunc("/koin rupiah", ListAllIdrCoins)
-    bot.HandleFunc("/harga {coin}", RetrieveIdrTicker)
+    go bot.HandleFunc("/koin rupiah", ListAllIdrCoins)
+    go bot.HandleFunc("/harga {coin}", RetrieveIdrTicker)
 
     // Set default handler if you want to process unmatched input
-    bot.HandleDefault(UnkownHandler)
+    go bot.HandleDefault(UnkownHandler)
 
     bot.ListenAndServe()
 }
 
 func ListAllIdrCoins(message *tbot.Message) {
-    models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
+    go models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
 
     coins := []string{"Bitcoin [btc]", "Bitcoin Cash [bch]", "Bitcoin Gold [btg]", "Litecoin [ltc]", "Ethereum [eth]", "Ethereum Classic [etc]", "Ripple [xrp]", "Lumens [xlm]", "Waves [waves]", "NXT [nxt]", "ZCoin [xzc]"}
 
@@ -48,11 +48,12 @@ func ListAllIdrCoins(message *tbot.Message) {
 }
 
 func RetrieveIdrTicker(message *tbot.Message) {
-    timestampNow := getTimestampNow()
     coinTicker := strings.ToLower(message.Vars["coin"])
+    timestampNow := getTimestampNow()
+
     shouldGetLatest := !models.CheckIfTimestampIsCurrent(coinTicker, timestampNow)
 
-    models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
+    go models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
 
     if shouldGetLatest {
         resp := sendRequestToFetchTicker(coinTicker, message)
@@ -63,8 +64,8 @@ func RetrieveIdrTicker(message *tbot.Message) {
 
             // check if the stat is not equal to new empty struct of Stat
             if stat != (models.Stat{}) {
-                models.StoreMarketStat(coinTicker, &stat, timestampNow)
-                models.SetMarketTimestamp(coinTicker, timestampNow)
+                go models.StoreMarketStat(coinTicker, &stat, timestampNow)
+                go models.SetMarketTimestamp(coinTicker, timestampNow)
 
                 pseudoTicker := stat.ConvertToPseudoTicker()
 
@@ -82,7 +83,7 @@ func RetrieveIdrTicker(message *tbot.Message) {
 }
 
 func UnkownHandler(message *tbot.Message) {
-    models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
+    go models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
     message.Replyf("Maaf %s, saya tidak mengerti perintah yang baru saja kamu ketik", message.From)
 }
 
