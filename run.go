@@ -17,7 +17,7 @@ import (
 var vipPublicAPI = os.Getenv("MARKET_API_URL")
 
 func Run() {
-    // Here we initialize the db and then assign it to a global var of RedisClient which is of type *gorm.DB
+    // Here we initialize the db and then assign it to a global var of RedisClient
     // as defined in models.go
     models.RedisClient = models.InitializeDatabase()
 
@@ -26,13 +26,25 @@ func Run() {
         log.Fatal(err)
     }
 
-    go bot.HandleFunc("/koin rupiah", ListAllIdrCoins)
+    go bot.HandleFunc("/koin", ListAllIdrCoins)
     go bot.HandleFunc("/harga {coin}", RetrieveIdrTicker)
+
+    // Help handlers
+    go bot.HandleFunc("/help", CustomHelpHandler)
+    go bot.HandleFunc("/tolong", CustomHelpHandler)
+    go bot.HandleFunc("/list", CustomHelpHandler)
 
     // Set default handler if you want to process unmatched input
     bot.HandleDefault(UnkownHandler)
 
     bot.ListenAndServe()
+}
+
+
+func CustomHelpHandler(message *tbot.Message) {
+    message.Reply("Inilah daftar perintah yang tersedia untuk kamu:")
+    message.Reply("/koin - Untuk mengetahui semua koin yang dapat ditanyakan harganya")
+    message.Reply("/harga NAMA_SINGKAT_KOIN || contohnya, ketik: /harga btc")
 }
 
 func ListAllIdrCoins(message *tbot.Message) {
@@ -86,6 +98,7 @@ func UnkownHandler(message *tbot.Message) {
     go models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
 
     message.Replyf("Maaf %s, saya tidak mengerti permintaanmu barusan", message.From.FirstName)
+    message.Reply("Kamu dapat melihat perintah yang tersedia dengan mengetik /help")
 }
 
 
