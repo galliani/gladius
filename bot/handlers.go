@@ -1,15 +1,9 @@
 package bot
 
 import (
-    "log"
     "strings"
-    "net/http"
-    "io/ioutil"
-    "encoding/json"
-    "time"
     
     "github.com/yanzay/tbot"
-    _ "github.com/joho/godotenv/autoload"
 
     "../models"
 )
@@ -40,44 +34,10 @@ func listAllIdrCoins(message *tbot.Message) {
 
 func retrieveIdrTradeStat(message *tbot.Message) {
     coinTicker := strings.ToLower(message.Vars["coin"])
-    timestampNow := getTimestampNow()
 
-    shouldGetLatest := !models.CheckIfTimestampIsCurrent(coinTicker, timestampNow)
+    message.Replyf("Berikut info mengenai aktivitas perdagangan IDR-%s", strings.ToUpper(coinTicker))
 
-    if shouldGetLatest {
-        resp := sendRequestToFetchTicker(coinTicker, message)
-        defer resp.Body.Close()
-
-        if resp.StatusCode == http.StatusOK {
-            stat := parseResponseAsTicker(resp)
-
-            // check if the stat is not equal to new empty struct of Stat
-            if stat != (models.Stat{}) {
-                go models.StoreMarketStat(coinTicker, &stat, timestampNow)
-                go models.SetMarketTimestamp(coinTicker, timestampNow)
-
-                pseudoTicker := stat.ConvertToPseudoTicker()
-
-                relayStats(coinTicker, message, pseudoTicker)
-            } else {
-                // The endpoint always return 200 no matter what, so this is basically the handler in case no Ticker was found
-                message.Replyf("Maaf, saya tidak bisa mendapatkan info mengenai aktivitas perdagangan IDR-%s", strings.ToUpper(coinTicker))
-            }
-        }
-    } else {
-        stat := models.RetrieveMarketStats(coinTicker)
-
-        relayStats(coinTicker, message, stat)
-    }
-}
-
-
-
-//// Private methods ////
-
-func relayStats(ticker string, message *tbot.Message, stat *models.PseudoTicker) {
-    message.Replyf("Berikut info mengenai aktivitas perdagangan IDR-%s", strings.ToUpper(ticker))
-
+    stat := models.RetrieveMarketStats(coinTicker)
     stat.DisplayAsMoney()
 
     message.Replyf("Harga Terakhir: %s", stat.Last)
@@ -86,37 +46,4 @@ func relayStats(ticker string, message *tbot.Message, stat *models.PseudoTicker)
     message.Replyf("Harga Tertinggi (24 jam): %s", stat.High)
     message.Replyf("Harga Terendah (24 jam): %s", stat.Low)
     message.Reply("==========")
-}
-
-
-func getTimestampNow() string {
-    timeNow := time.Now().UTC()
-    return timeNow.Format("200601021504")
-}
-
-
-// HTTP-related methods
-func sendRequestToFetchTicker(coinTicker string, message *tbot.Message) *http.Response {
-    resp, err := http.Get(vipPublicAPI + coinTicker + "_idr/ticker")
-    if err != nil {
-        message.Reply("Maaf, saya gagal mendapatkan data terbaru")        
-        log.Fatal(err)
-    }
-
-    return resp
-}
-
-
-func parseResponseAsTicker(resp *http.Response) models.Stat {
-    log.Println("Sending enquiry to Market.....")
-
-    body, err := ioutil.ReadAll(resp.Body)
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    stat := models.Stat{}
-    json.Unmarshal([]byte(body), &stat)
-
-    return stat
 }

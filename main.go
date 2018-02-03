@@ -20,6 +20,7 @@ func handler(request lambdaparser.Request) (lambdaparser.Response, error) {
 
     message := requestBody.Message
     models.StoreUser(message.From.Username, message.Chat.FirstName, message.From.ID)
+    models.UpdateMarketData(message.Text)
 
     bot.Run()
 

@@ -8,8 +8,6 @@ import (
     _ "github.com/joho/godotenv/autoload"
 )
 
-var vipPublicAPI = os.Getenv("MARKET_API_URL")
-
 
 func Run() {
     bot, err := tbot.NewServer(os.Getenv("TELEGRAM_TOKEN"))
