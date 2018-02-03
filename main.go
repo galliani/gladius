@@ -2,6 +2,8 @@ package main
 
 import (
     "fmt"
+    "time"
+
     "github.com/aws/aws-lambda-go/lambda"
 
     "./bot"
@@ -10,17 +12,25 @@ import (
 )
 
 
+var currentTime = time.Now().UTC()
+
+
 func handler(request lambdaparser.Request) (lambdaparser.Response, error) {
     requestBody, err := lambdaparser.ProcessRequest(request.Body)
-    if err != nil { panic(err) }
+    if err != nil { 
+        return lambdaparser.Response{
+            Message: "Invalid request received",
+            Ok:      false,
+        }, nil        
+    }
+
+    message := requestBody.Message
 
     // Here we initialize the db and then assign it to a global var of RedisClient
     // as defined in models.go
     models.RedisClient = models.InitializeDatabase()
-
-    message := requestBody.Message
     models.StoreUser(message.From.Username, message.Chat.FirstName, message.From.ID)
-    models.UpdateMarketData(message.Text)
+    models.UpdateMarketData(message.Text, currentTime.Format("200601021504"))
 
     bot.Run()
 

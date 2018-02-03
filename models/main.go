@@ -4,7 +4,7 @@ import (
     "os"
     "strings"
     "strconv"
-    "time"
+
     "encoding/json"
 
     "../outbound"
@@ -91,11 +91,10 @@ func (p *PseudoTicker) DisplayAsMoney() {
 
 
 // Redis-related functions
-func UpdateMarketData(messageText string) {
+func UpdateMarketData(messageText string, timestampNow string) {
     messageSplitted := strings.Split(messageText, " ")
 
     if messageSplitted[0] == "/harga" && len(messageSplitted) > 1 {
-        timestampNow := time.Now().UTC().Format("200601021504")
         coinTicker := messageSplitted[1]
     
         shouldGetLatest := !checkIfTimestampIsCurrent(coinTicker, timestampNow)
