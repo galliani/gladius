@@ -12,7 +12,7 @@ import (
 )
 
 
-func Run() {
+func run() {
     // Here we initialize the db and then assign it to a global var of RedisClient
     // as defined in models.go
     models.RedisClient = models.InitializeDatabase()
