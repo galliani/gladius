@@ -1,4 +1,5 @@
-package main
+package bot
+
 import (
     "log"
     "os"
@@ -6,13 +7,13 @@ import (
     "github.com/yanzay/tbot"
     _ "github.com/joho/godotenv/autoload"
 
-    // Custom lib packages
-    "./models"
-    "./handlers"
+    "../models"
 )
 
+var vipPublicAPI = os.Getenv("MARKET_API_URL")
 
-func run() {
+
+func Run() {
     // Here we initialize the db and then assign it to a global var of RedisClient
     // as defined in models.go
     models.RedisClient = models.InitializeDatabase()
@@ -22,16 +23,16 @@ func run() {
         log.Fatal(err)
     }
 
-    go bot.HandleFunc("/koin", handlers.ListAllIdrCoins)
-    go bot.HandleFunc("/harga {coin}", handlers.RetrieveIdrTradeStat)
+    go bot.HandleFunc("/koin", listAllIdrCoins)
+    go bot.HandleFunc("/harga {coin}", retrieveIdrTradeStat)
 
     // Help handlers
-    go bot.HandleFunc("/help", handlers.CustomHelpHandler)
-    go bot.HandleFunc("/tolong", handlers.CustomHelpHandler)
-    go bot.HandleFunc("/list", handlers.CustomHelpHandler)
+    go bot.HandleFunc("/help", customHelpHandler)
+    go bot.HandleFunc("/tolong", customHelpHandler)
+    go bot.HandleFunc("/list", customHelpHandler)
 
     // Set default handler if you want to process unmatched input
-    bot.HandleDefault(handlers.UnkownHandler)
+    bot.HandleDefault(unkownHandler)
 
     bot.ListenAndServe()
 }

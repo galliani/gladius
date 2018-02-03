@@ -1,8 +1,7 @@
-package handlers
+package bot
 
 import (
     "log"
-    "os"
     "strings"
     "net/http"
     "io/ioutil"
@@ -15,10 +14,7 @@ import (
     "../models"
 )
 
-var vipPublicAPI = os.Getenv("MARKET_API_URL")
-
-
-func UnkownHandler(message *tbot.Message) {
+func unkownHandler(message *tbot.Message) {
     go models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
 
     message.Replyf("Maaf %s, saya tidak mengerti permintaanmu barusan", message.From.FirstName)
@@ -26,14 +22,14 @@ func UnkownHandler(message *tbot.Message) {
 }
 
 
-func CustomHelpHandler(message *tbot.Message) {
+func customHelpHandler(message *tbot.Message) {
     message.Reply("Inilah daftar perintah yang tersedia untuk kamu:")
     message.Reply("/koin - Untuk mengetahui semua koin yang dapat ditanyakan harganya")
     message.Reply("/harga NAMA_SINGKAT_KOIN || contohnya, ketik: /harga btc")
 }
 
 
-func ListAllIdrCoins(message *tbot.Message) {
+func listAllIdrCoins(message *tbot.Message) {
     go models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
 
     coins := []string{"Bitcoin [btc]", "Bitcoin Cash [bch]", "Bitcoin Gold [btg]", "Litecoin [ltc]", "Ethereum [eth]", "Ethereum Classic [etc]", "Ripple [xrp]", "Lumens [xlm]", "Waves [waves]", "NXT [nxt]", "ZCoin [xzc]"}
@@ -46,7 +42,7 @@ func ListAllIdrCoins(message *tbot.Message) {
 }
 
 
-func RetrieveIdrTradeStat(message *tbot.Message) {
+func retrieveIdrTradeStat(message *tbot.Message) {
     coinTicker := strings.ToLower(message.Vars["coin"])
     timestampNow := getTimestampNow()
 

@@ -1,4 +1,4 @@
-package main
+package parser
 import (
     "log"
     "encoding/json"
@@ -82,7 +82,7 @@ type Response struct {
 }
 
 
-func processLambdaRequest(body string) RequestBody {
+func ProcessRequest(body string) RequestBody {
     requestBody := RequestBody{}
 
     err := json.Unmarshal([]byte(body), &requestBody)
