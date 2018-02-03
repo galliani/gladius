@@ -6,18 +6,12 @@ import (
     
     "github.com/yanzay/tbot"
     _ "github.com/joho/godotenv/autoload"
-
-    "../models"
 )
 
 var vipPublicAPI = os.Getenv("MARKET_API_URL")
 
 
 func Run() {
-    // Here we initialize the db and then assign it to a global var of RedisClient
-    // as defined in models.go
-    models.RedisClient = models.InitializeDatabase()
-
     bot, err := tbot.NewServer(os.Getenv("TELEGRAM_TOKEN"))
     if err != nil {
         log.Fatal(err)

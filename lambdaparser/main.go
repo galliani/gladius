@@ -1,4 +1,4 @@
-package parser
+package lambdaparser
 import (
     "log"
     "encoding/json"
@@ -82,14 +82,14 @@ type Response struct {
 }
 
 
-func ProcessRequest(body string) RequestBody {
+func ProcessRequest(body string) (RequestBody, error) {
     requestBody := RequestBody{}
 
     err := json.Unmarshal([]byte(body), &requestBody)
     if err != nil {
-        panic(err)
+        return requestBody, err
     }
 
     log.Printf("Body request received: %s", requestBody.Message)
-    return requestBody
+    return requestBody, err
 }

@@ -85,7 +85,7 @@ func (p *PseudoTicker) DisplayAsMoney() {
 
 
 // Redis-related functions
-func StoreUser(username string, firstName string, lastName string, telegramUID int) {
+func StoreUser(username string, firstName string, telegramUID int) {
     recordKey := os.Getenv("REDIS_GLAD_NAMESPACE") + ":telegram:user:" + strconv.Itoa(telegramUID)
 
     // Check if user already stored, using the key
@@ -98,7 +98,7 @@ func StoreUser(username string, firstName string, lastName string, telegramUID i
     if val != 1 {
         var user = make(map[string]interface{})
         user["username"] = username
-        user["fullname"] = firstName + " " + lastName
+        user["fullname"] = firstName
 
         storingUserErr := RedisClient.HMSet(recordKey, user).Err()
         if storingUserErr != nil {

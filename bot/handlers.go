@@ -15,8 +15,6 @@ import (
 )
 
 func unkownHandler(message *tbot.Message) {
-    go models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
-
     message.Replyf("Maaf %s, saya tidak mengerti permintaanmu barusan", message.From.FirstName)
     message.Reply("Kamu dapat melihat perintah yang tersedia dengan mengetik /help")
 }
@@ -30,8 +28,6 @@ func customHelpHandler(message *tbot.Message) {
 
 
 func listAllIdrCoins(message *tbot.Message) {
-    go models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
-
     coins := []string{"Bitcoin [btc]", "Bitcoin Cash [bch]", "Bitcoin Gold [btg]", "Litecoin [ltc]", "Ethereum [eth]", "Ethereum Classic [etc]", "Ripple [xrp]", "Lumens [xlm]", "Waves [waves]", "NXT [nxt]", "ZCoin [xzc]"}
 
     message.Reply("Berikut adalah daftar koin yang nilai tukarnya dengan rupiah dapat kamu tanya ke saya")
@@ -47,8 +43,6 @@ func retrieveIdrTradeStat(message *tbot.Message) {
     timestampNow := getTimestampNow()
 
     shouldGetLatest := !models.CheckIfTimestampIsCurrent(coinTicker, timestampNow)
-
-    go models.StoreUser(message.From.UserName, message.From.FirstName, message.From.LastName, message.From.ID)
 
     if shouldGetLatest {
         resp := sendRequestToFetchTicker(coinTicker, message)
