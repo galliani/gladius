@@ -2,3 +2,5 @@
 vendor/github.com
 main
 deployment.zip
+cert.pem
+cert.key
