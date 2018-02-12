@@ -9,7 +9,7 @@ import (
 
     "gopkg.in/telegram-bot-api.v4"
     _ "github.com/joho/godotenv/autoload"
-    // "github.com/aws/aws-lambda-go/lambda"
+    "github.com/aws/aws-lambda-go/lambda"
 
     // "./bot"
     "./lambdaparser"
@@ -21,7 +21,13 @@ var currentTime = time.Now().UTC()
 
 
 func main() {
-    coreExecutor()
+    isProduction := os.Getenv("IS_PRODUCTION")
+
+    if isProduction == "true" {
+        lambda.Start(handler)
+    } else {
+        coreExecutor()
+    }
 }
 
 
